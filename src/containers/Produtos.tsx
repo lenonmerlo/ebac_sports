@@ -1,45 +1,55 @@
-// src/components/Produto/index.tsx
-import { Produto as ProdutoType } from '../../App'
+// src/containers/Produtos/index.tsx
+import React from 'react'
+import { Produto as ProdutoType } from '../App'
+import Produto from '../components/Produto'
+
 import * as S from './styles'
+import { useDispatch, useSelector } from 'react-redux'
+import { adicionarAoCarrinho } from '../features/carrinho/carrinhoSlice'
+import { favoritar } from '../features/favoritos/favoritosSlice'
+import { RootState } from '../store'
 
-// src/containers/Produtos.tsx
 type Props = {
-  produtos: Produto[] // Adicione o tipo Produto correto
-  favoritos: Produto[]
-  favoritar: (produto: Produto) => void
-  adicionarAoCarrinho: (produto: Produto) => void
+  produtos: ProdutoType[]
+  favoritos: ProdutoType[]
 }
 
-export const paraReal = (valor: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-    valor
-  )
+const ProdutosComponent = ({ produtos, favoritos }: Props) => {
+  const dispatch = useDispatch()
 
-const ProdutoComponent = ({
-  produto,
-  aoComprar,
-  favoritar,
-  estaNosFavoritos
-}: Props) => {
+  const adicionarAoCarrinhoHandler = (produto: ProdutoType) => {
+    if (carrinho.find((p) => p.id === produto.id)) {
+      alert('Item já adicionado')
+    } else {
+      dispatch(adicionarAoCarrinho(produto))
+    }
+  }
+
+  const favoritarHandler = (produto: ProdutoType) => {
+    dispatch(favoritar(produto))
+  }
+
+  const carrinho = useSelector((state: RootState) => state.carrinho.itens)
+
+  const produtoEstaNosFavoritos = (produto: ProdutoType) => {
+    return favoritos.some((f) => f.id === produto.id)
+  }
+
   return (
-    <S.Produto>
-      <S.Capa>
-        <img src={produto.imagem} alt={produto.nome} />
-      </S.Capa>
-      <S.Titulo>{produto.nome}</S.Titulo>
-      <S.Prices>
-        <strong>{paraReal(produto.preco)}</strong>
-      </S.Prices>
-      <S.BtnComprar onClick={() => favoritar(produto)} type="button">
-        {estaNosFavoritos
-          ? '- Remover dos favoritos'
-          : '+ Adicionar aos favoritos'}
-      </S.BtnComprar>
-      <S.BtnComprar onClick={() => aoComprar(produto)} type="button">
-        Adicionar ao carrinho
-      </S.BtnComprar>
-    </S.Produto>
+    <>
+      <S.Produtos>
+        {produtos.map((produto) => (
+          <Produto
+            estaNosFavoritos={produtoEstaNosFavoritos(produto)}
+            key={produto.id}
+            produto={produto}
+            favoritar={favoritarHandler}
+            aoComprar={adicionarAoCarrinhoHandler}
+          />
+        ))}
+      </S.Produtos>
+    </>
   )
 }
 
-export default ProdutoComponent
+export default ProdutosComponent

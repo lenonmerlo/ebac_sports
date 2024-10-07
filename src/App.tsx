@@ -1,12 +1,11 @@
 // src/App.tsx
-import { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import Header from './components/Header'
 import Produtos from './containers/Produtos'
+
 import { GlobalStyle } from './styles'
-import { adicionarAoCarrinho } from './carrinhoSlice'
-import { useFetchProdutosQuery } from './api' // Importar hook da API
-import { RootState } from '@reduxjs/toolkit/dist/query/react'
+import { useGetProdutosQuery } from './features/produtos/produtosApi'
+import { useSelector } from 'react-redux'
+import { RootState } from './store'
 
 // src/App.tsx
 export type Produto = {
@@ -14,39 +13,23 @@ export type Produto = {
   nome: string
   preco: number
   imagem: string
-  // outras propriedades
 }
 
 function App() {
-  const dispatch = useDispatch()
-  const { data: produtos = [], error } = useFetchProdutosQuery() // Usar o hook
-
+  const { data: produtos = [], error, isLoading } = useGetProdutosQuery()
   const carrinho = useSelector((state: RootState) => state.carrinho.itens)
-  const favoritos = useSelector((state: RootState) => state.favoritos) // Defina o slice de favoritos se necessário
-
-  const handleAdicionarAoCarrinho = (produto: Produto) => {
-    dispatch(adicionarAoCarrinho(produto))
-  }
-
-  const handleFavoritar = (produto: Produto) => {
-    // Lógica para favoritar (caso tenha um slice para favoritos)
-  }
-
-  if (error) {
-    return <div>Error loading products</div> // Tratamento de erro
-  }
+  const favoritos = useSelector((state: RootState) => state.favoritos.itens)
 
   return (
     <>
       <GlobalStyle />
       <div className="container">
-        <Header favoritos={favoritos} itensNoCarrinho={carrinho} />
-        <Produtos
-          produtos={produtos}
-          favoritos={favoritos}
-          favoritar={handleFavoritar}
-          adicionarAoCarrinho={handleAdicionarAoCarrinho}
-        />
+        <Header />
+        {isLoading && <p>Carregando produtos...</p>}
+        {error && <p>Erro ao carregar produtos.</p>}
+        {!isLoading && !error && (
+          <Produtos produtos={produtos} favoritos={favoritos} />
+        )}
       </div>
     </>
   )
